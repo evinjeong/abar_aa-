@@ -326,8 +326,9 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
                             type="text"
                             value={item.sales}
                             onChange={(e) => handleExcelRowUpdate(item.tempId, 'sales', e.target.value)}
-                            style={{ width: '100px', padding: '6px', fontSize: '0.8rem', textAlign: 'right', color: 'var(--primary)' }}
+                            style={{ width: '90px', padding: '6px', fontSize: '0.8rem', textAlign: 'right', color: 'var(--primary)' }}
                             placeholder="매출"
+                            title="매출액"
                         />
                     </div>
                     <div className="input-group" style={{ margin: 0 }}>
@@ -335,8 +336,39 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
                             type="text"
                             value={item.purchases}
                             onChange={(e) => handleExcelRowUpdate(item.tempId, 'purchases', e.target.value)}
-                            style={{ width: '100px', padding: '6px', fontSize: '0.8rem', textAlign: 'right', color: 'var(--danger)' }}
+                            style={{ width: '90px', padding: '6px', fontSize: '0.8rem', textAlign: 'right', color: 'var(--danger)' }}
                             placeholder="매입"
+                            title="매입액"
+                        />
+                    </div>
+                    <div className="input-group" style={{ margin: 0 }}>
+                        <input
+                            type="text"
+                            value={item.ads}
+                            onChange={(e) => handleExcelRowUpdate(item.tempId, 'ads', e.target.value)}
+                            style={{ width: '80px', padding: '6px', fontSize: '0.8rem', textAlign: 'right', color: '#fbbf24' }}
+                            placeholder="광고비"
+                            title="광고비"
+                        />
+                    </div>
+                    <div className="input-group" style={{ margin: 0 }}>
+                        <input
+                            type="text"
+                            value={item.commission}
+                            onChange={(e) => handleExcelRowUpdate(item.tempId, 'commission', e.target.value)}
+                            style={{ width: '80px', padding: '6px', fontSize: '0.8rem', textAlign: 'right', color: '#94a3b8' }}
+                            placeholder="수수료"
+                            title="수수료"
+                        />
+                    </div>
+                    <div className="input-group" style={{ margin: 0 }}>
+                        <input
+                            type="text"
+                            value={item.others}
+                            onChange={(e) => handleExcelRowUpdate(item.tempId, 'others', e.target.value)}
+                            style={{ width: '80px', padding: '6px', fontSize: '0.8rem', textAlign: 'right', color: '#94a3b8' }}
+                            placeholder="기타"
+                            title="운영비/기타"
                         />
                     </div>
                 </div>
