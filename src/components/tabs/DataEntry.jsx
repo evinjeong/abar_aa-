@@ -86,12 +86,38 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-            // Basic column detection
-            // Expected columns: 0: Date, 1: VendorName, 2: Sales, 3: Purchases, 4: Ads, 5: Commission, 6: Others
-            const parsed = json.slice(1).map((row, idx) => {
-                if (!row[1]) return null;
+            if (json.length < 2) {
+                alert("데이터가 부족하거나 올바른 엑셀 형식이 아닙니다.");
+                return;
+            }
 
-                const vendorName = String(row[1]).trim();
+            // --- Smart Column Detection ---
+            const firstRow = json[0] || [];
+            let colMap = { date: -1, vendor: -1, sales: -1, purchases: -1, ads: -1, commission: -1, others: -1 };
+
+            firstRow.forEach((cell, idx) => {
+                const header = String(cell || "").trim();
+                if (header.includes("날짜") || header.includes("일자") || header.includes("Date")) colMap.date = idx;
+                if (header.includes("거래처") || header.includes("업체") || header.includes("Vendor")) colMap.vendor = idx;
+                if (header.includes("매출") || header.includes("판매") || header.includes("Sales")) colMap.sales = idx;
+                if (header.includes("매입") || header.includes("구매") || header.includes("Purchase")) colMap.purchases = idx;
+                if (header.includes("광고") || header.includes("Ads")) colMap.ads = idx;
+                if (header.includes("수수료") || header.includes("Fee")) colMap.commission = idx;
+                if (header.includes("기타") || header.includes("운영") || header.includes("Other")) colMap.others = idx;
+            });
+
+            // Fallback to defaults if headers not found (0: Date, 1: Vendor, 2: Sales, 3: Purchases, 4: Ads, 5: Commission, 6: Others)
+            if (colMap.date === -1) colMap.date = 0;
+            if (colMap.vendor === -1) colMap.vendor = 1;
+            if (colMap.sales === -1) colMap.sales = 2;
+            if (colMap.purchases === -1) colMap.purchases = 3;
+            if (colMap.ads === -1) colMap.ads = 4;
+            if (colMap.commission === -1) colMap.commission = 5;
+            if (colMap.others === -1) colMap.others = 6;
+
+            const parsed = json.slice(1).map((row, idx) => {
+                const vendorName = String(row[colMap.vendor] || "").trim();
+                if (!vendorName) return null;
 
                 // Matching logic: 1. Direct name match, 2. History (mappings) match
                 let matchedVendor = vendors.find(v => v.name === vendorName);
@@ -99,7 +125,7 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
                     matchedVendor = vendors.find(v => v.no === mappings[vendorName]);
                 }
 
-                let rawDate = String(row[0] || "");
+                let rawDate = String(row[colMap.date] || "");
                 let month = "";
                 let date = "";
 
@@ -121,11 +147,11 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
                     vendorName,
                     vendorNo: matchedVendor ? matchedVendor.no : null,
                     category: matchedVendor ? matchedVendor.category : '미분류',
-                    sales: parseNum(row[2]),
-                    purchases: parseNum(row[3]),
-                    ads: parseNum(row[4]),
-                    commission: parseNum(row[5]),
-                    others: parseNum(row[6]),
+                    sales: parseNum(row[colMap.sales]),
+                    purchases: parseNum(row[colMap.purchases]),
+                    ads: parseNum(row[colMap.ads]),
+                    commission: parseNum(row[colMap.commission]),
+                    others: parseNum(row[colMap.others]),
                     isMatched: !!matchedVendor
                 };
             }).filter(item => item !== null);
