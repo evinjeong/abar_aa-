@@ -19,8 +19,31 @@
   }
 
   .content-area {
-    padding: 1rem;
+    padding: 1rem 0.5rem;
     overflow-y: visible;
+  }
+
+  /* Specific fix for Analysis and Dashboard headers */
+  .tab-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tab-header>div {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+  }
+
+  .tab-header h2 {
+    font-size: 1.4rem !important;
+    width: 100%;
+  }
+
+  .tab-header .btn-primary {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -131,37 +154,51 @@
     height: auto;
     border-right: none;
     border-bottom: 1px solid var(--border);
-    padding: 1rem;
+    padding: 0.75rem 0.5rem;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
+    backdrop-filter: blur(20px);
+    background: rgba(15, 15, 25, 0.95);
   }
 
   .sidebar-logo {
-    margin-bottom: 1rem !important;
-    text-align: center;
+    display: none;
+    /* Hide logo on mobile to save space */
   }
 
   .sidebar-nav {
     flex-direction: row !important;
-    justify-content: space-around;
-    gap: 0.5rem !important;
+    justify-content: space-between;
+    gap: 2px !important;
   }
 
   .nav-item {
-    padding: 8px !important;
-    font-size: 0.8rem;
+    padding: 6px 4px !important;
+    font-size: 0.7rem;
     flex-direction: column;
     gap: 4px !important;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    border-radius: 8px;
+  }
+
+  .nav-item svg {
+    width: 18px !important;
+    height: 18px !important;
   }
 
   .nav-item span {
     display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
   }
 
-  .sidebar>div:last-child {
+  .sidebar-version {
     display: none;
-    /* Hide settings on mobile sidebar to save space */
   }
 }
 
@@ -304,15 +341,47 @@ td {
 
   .card {
     padding: 1rem !important;
+    border-radius: 12px;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
   }
 
   h2 {
-    font-size: 1.5rem !important;
+    font-size: 1.4rem !important;
   }
 
   h3 {
     font-size: 1.2rem !important;
   }
+
+  /* Responsive grid for stat cards */
+  .stat-grid-3 {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .report-header-title {
+    font-size: 1.4rem !important;
+  }
+
+  .report-header-meta {
+    flex-direction: column !important;
+    gap: 0.3rem !important;
+    text-align: center;
+  }
+
+  .tab-header {
+    margin-bottom: 1.5rem !important;
+  }
+}
+
+/* Utility for dynamic grids */
+.stat-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
 }
 
 .btn-outline {

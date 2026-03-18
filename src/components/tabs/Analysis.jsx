@@ -78,14 +78,14 @@ const Analysis = ({ vendors, records }) => {
 
     return (
         <div className="animate-fade-in">
-            <div className="tab-header" style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div className="tab-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                     <h2>심층 분석 리포트</h2>
                     <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '8px' }}>
                         <button
                             onClick={() => setAnalysisMode('monthly')}
                             style={{
-                                padding: '6px 16px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', border: 'none', transition: 'all 0.2s',
+                                padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', border: 'none', transition: 'all 0.2s',
                                 background: analysisMode === 'monthly' ? 'var(--primary)' : 'transparent',
                                 color: analysisMode === 'monthly' ? '#fff' : 'var(--text-muted)'
                             }}
@@ -93,7 +93,7 @@ const Analysis = ({ vendors, records }) => {
                         <button
                             onClick={() => setAnalysisMode('cumulative')}
                             style={{
-                                padding: '6px 16px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', border: 'none', transition: 'all 0.2s',
+                                padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', border: 'none', transition: 'all 0.2s',
                                 background: analysisMode === 'cumulative' ? 'var(--primary)' : 'transparent',
                                 color: analysisMode === 'cumulative' ? '#fff' : 'var(--text-muted)'
                             }}
@@ -110,19 +110,19 @@ const Analysis = ({ vendors, records }) => {
                         </select>
                     )}
                 </div>
-                <button className="btn-primary" onClick={exportPDF}>
+                <button className="btn-primary" onClick={exportPDF} style={{ display: 'flex', alignItems: 'center' }}>
                     <FileText size={18} style={{ marginRight: '8px' }} /> PDF 출력
                 </button>
             </div>
 
             <div ref={reportRef} style={{ padding: '10px' }}>
-                <div style={{ marginBottom: '3rem', textAlign: 'center' }}>
-                    <h1 style={{ fontSize: '2.2rem', marginBottom: '0.5rem', color: '#fff' }}>
+                <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
+                    <h1 className="report-header-title" style={{ fontSize: '2.2rem', marginBottom: '0.5rem', color: '#fff' }}>
                         {analysisMode === 'monthly' ? `[${selectedMonth}] 월간` : '전체 기간 누적'} 사업 성과 리포트
                     </h1>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                    <div className="report-header-meta" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                         <span>출력일: {new Date().toLocaleDateString()}</span>
-                        <span>•</span>
+                        <span className="hide-on-mobile">•</span>
                         <span>대상: {analysisMode === 'monthly' ? selectedMonth : '전체 데이터'}</span>
                     </div>
                 </div>
@@ -138,7 +138,7 @@ const Analysis = ({ vendors, records }) => {
                                 <span className="category-tag tag-vendor">종합지표</span>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+                            <div className="stat-grid-3" style={{ marginBottom: '2rem' }}>
                                 <div style={{ borderLeft: '3px solid var(--primary)', paddingLeft: '1rem' }}>
                                     <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>매출 합계</p>
                                     <p style={{ fontSize: '1.2rem', fontWeight: '600' }}>{stats.sales.toLocaleString()}원</p>

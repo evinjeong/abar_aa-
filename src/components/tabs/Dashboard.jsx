@@ -87,13 +87,13 @@ const Dashboard = ({ vendors, records }) => {
     const overallChart = Object.values(monthlyOverall).sort((a, b) => a.month.localeCompare(b.month));
 
     const StatCard = ({ title, value, icon, color }) => (
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div className="icon-circle" style={{ background: color, margin: 0, minWidth: '50px' }}>
-                {icon}
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem' }}>
+            <div className="icon-circle" style={{ background: color, margin: 0, minWidth: '40px', width: '40px', height: '40px' }}>
+                {React.cloneElement(icon, { size: 18 })}
             </div>
-            <div>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '4px' }}>{title}</p>
-                <h3 style={{ fontSize: '1.25rem' }}>{value.toLocaleString()}원</h3>
+            <div style={{ minWidth: 0, flex: 1 }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</p>
+                <h3 style={{ fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value.toLocaleString()}원</h3>
             </div>
         </div>
     );
@@ -110,7 +110,7 @@ const Dashboard = ({ vendors, records }) => {
             {/* Section 1: Integrated Global Summary */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
                 gap: '1rem',
                 marginBottom: '2rem'
             }}>
