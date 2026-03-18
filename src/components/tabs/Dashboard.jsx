@@ -21,13 +21,15 @@ const Dashboard = ({ vendors, records }) => {
     const handleVendorClick = (vendorNo) => {
         if (!vendorNo) return;
         setSelectedVendorNo(vendorNo.toString());
+        setVendorSearch(''); // Clear search so the vendor is selectable in the dropdown list
         // Small delay to ensure state updates if needed, then scroll
         setTimeout(() => {
             const section = document.getElementById('vendor-analysis-section');
             if (section) {
-                section.scrollIntoView({ behavior: 'smooth' });
+                // For mobile, scroll-margin-top in CSS handles the offset from sticky header
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-        }, 100);
+        }, 150);
     };
 
     // 1. GLOBAL STATS
@@ -171,7 +173,7 @@ const Dashboard = ({ vendors, records }) => {
 
             {/* Section: Category Monthly Explorer (New Selection Layout) */}
             <div className="card" style={{ marginBottom: '2.5rem', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="card-header-flex">
                     <div>
                         <h3 style={{ marginBottom: '4px' }}>📊 카테고리별 월별 실적 분석</h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>카테고리를 선택하여 월별 실적을 분석합니다.</p>
@@ -403,10 +405,10 @@ const Dashboard = ({ vendors, records }) => {
 
             {/* Section 3: Shopping Mall (쇼핑몰) 분석 */}
             <div className="card" style={{ marginBottom: '2.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <div className="card-header-flex">
                     <h3>[쇼핑몰] {shopActiveMonth ? `[${shopActiveMonth}] 상세 현황` : '월별 상세 분석 (광고비/수수료 및 ROAS)'}</h3>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        {shopActiveMonth && <button onClick={() => setShopActiveMonth(null)} style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer' }}>전체보기</button>}
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        {shopActiveMonth && <button onClick={() => setShopActiveMonth(null)} className="btn-outline" style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '4px' }}>전체보기</button>}
                         <span className="category-tag tag-shopping">쇼핑몰</span>
                     </div>
                 </div>
@@ -525,10 +527,10 @@ const Dashboard = ({ vendors, records }) => {
             {/* Section 4: Home Shopping & Others */}
             <div className="responsive-double-grid" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2.5rem' }}>
                 <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div className="card-header-flex">
                         <h3>[홈쇼핑] {homeActiveMonth ? `[${homeActiveMonth}] 상세 현황` : '매입/매출/수익 종합 분석'}</h3>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            {homeActiveMonth && <button onClick={() => setHomeActiveMonth(null)} style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer' }}>전체보기</button>}
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                            {homeActiveMonth && <button onClick={() => setHomeActiveMonth(null)} className="btn-outline" style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '4px' }}>전체보기</button>}
                             <span className="category-tag tag-home">홈쇼핑</span>
                         </div>
                     </div>
@@ -615,10 +617,10 @@ const Dashboard = ({ vendors, records }) => {
                 </div>
 
                 <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div className="card-header-flex">
                         <h3>[기타/운영비] {otherActiveMonth ? `[${otherActiveMonth}] 상세 비용` : '월별 비용 및 실적'}</h3>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            {otherActiveMonth && <button onClick={() => setOtherActiveMonth(null)} style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer' }}>전체보기</button>}
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                            {otherActiveMonth && <button onClick={() => setOtherActiveMonth(null)} className="btn-outline" style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '4px' }}>전체보기</button>}
                             <span className="category-tag tag-etc">기타</span>
                         </div>
                     </div>
@@ -705,12 +707,12 @@ const Dashboard = ({ vendors, records }) => {
 
             {/* Section 5: 업체별 상세 월별 분석 (Drill-down) */}
             <div id="vendor-analysis-section" className="card" style={{ border: '1px solid var(--primary)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div className="card-header-flex">
                     <div>
                         <h3 style={{ marginBottom: '4px' }}>🔍 업체별 상세 월별 분석</h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>특정 업체를 선택하여 월별 상세 실적 및 추이를 분석합니다.</p>
                     </div>
-                    <div style={{ display: 'flex', gap: '0', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ display: 'flex', gap: '0', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', width: '100%', maxWidth: '350px' }}>
                         <input
                             type="text"
                             placeholder="업체명 검색..."
@@ -722,7 +724,8 @@ const Dashboard = ({ vendors, records }) => {
                                 background: 'transparent',
                                 color: '#fff',
                                 fontSize: '0.85rem',
-                                width: '130px',
+                                width: '40%',
+                                minWidth: '100px',
                                 borderRight: '1px solid rgba(255,255,255,0.1)'
                             }}
                         />
@@ -734,7 +737,7 @@ const Dashboard = ({ vendors, records }) => {
                                 border: 'none',
                                 background: 'transparent',
                                 color: '#fff',
-                                width: '180px',
+                                width: '60%',
                                 fontSize: '0.85rem',
                                 cursor: 'pointer'
                             }}
