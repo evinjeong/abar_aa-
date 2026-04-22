@@ -6,6 +6,7 @@ import VendorList from './components/tabs/VendorList';
 import DataEntry from './components/tabs/DataEntry';
 import Analysis from './components/tabs/Analysis';
 import SettingsTab from './components/tabs/Settings';
+import { GitHubSync, getSyncSettings } from './utils/githubSync';
 import './App.css';
 
 // Pre-bundled data for reliability
@@ -18,6 +19,8 @@ function App() {
   const [vendors, setVendors] = useState([]);
   const [records, setRecords] = useState([]);
   const [vendorMappings, setVendorMappings] = useState({});
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, success, error
+  const [shas, setShas] = useState({ vendors: null, records: null });
 
   useEffect(() => {
     // 1. Initial Data Load from LocalStorage
@@ -46,7 +49,57 @@ function App() {
     setVendors(initialVendors);
     setRecords(initialRecords);
     if (savedMappings) setVendorMappings(JSON.parse(savedMappings));
+
+    // 2. Try Cloud Sync if settings exist
+    const cloudSync = async () => {
+      const settings = getSyncSettings();
+      if (!settings || !settings.token) return;
+
+      setSyncStatus('syncing');
+      const api = new GitHubSync(settings.token, settings.owner, settings.repo, settings.branch);
+
+      try {
+        const vendorData = await api.getFile('src/data/vendors.json');
+        const recordData = await api.getFile('src/data/records.json');
+
+        setShas({ vendors: vendorData.sha, records: recordData.sha });
+
+        if (vendorData.content) {
+          setVendors(vendorData.content);
+          localStorage.setItem('abar_vendors', JSON.stringify(vendorData.content));
+        }
+        if (recordData.content) {
+          setRecords(recordData.content);
+          localStorage.setItem('abar_records', JSON.stringify(recordData.content));
+        }
+        setSyncStatus('success');
+      } catch (err) {
+        console.error("Cloud Sync Failed:", err);
+        setSyncStatus('error');
+      }
+    };
+
+    cloudSync();
   }, []);
+
+  const syncToCloud = async (type, data) => {
+    const settings = getSyncSettings();
+    if (!settings || !settings.token) return;
+
+    setSyncStatus('syncing');
+    const api = new GitHubSync(settings.token, settings.owner, settings.repo, settings.branch);
+
+    try {
+      const path = type === 'vendors' ? 'src/data/vendors.json' : 'src/data/records.json';
+      const newSha = await api.updateFile(path, data, shas[type]);
+      setShas(prev => ({ ...prev, [type]: newSha }));
+      setSyncStatus('success');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    } catch (err) {
+      console.error("Cloud Upload Failed:", err);
+      setSyncStatus('error');
+    }
+  };
 
   const resetData = () => {
     if (window.confirm("모든 데이터를 서버 초기값(271건)으로 복구하시겠습니까? 현재 입력된 새 데이터는 사라집니다.")) {
@@ -60,11 +113,13 @@ function App() {
   const saveVendors = (newVendors) => {
     setVendors(newVendors);
     localStorage.setItem('abar_vendors', JSON.stringify(newVendors));
+    syncToCloud('vendors', newVendors);
   };
 
   const saveRecords = (newRecords) => {
     setRecords(newRecords);
     localStorage.setItem('abar_records', JSON.stringify(newRecords));
+    syncToCloud('records', newRecords);
   };
 
   const saveMappings = (newMappings) => {
@@ -78,7 +133,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onReset={resetData} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onReset={resetData} syncStatus={syncStatus} />
       <main className="content-area">
         {activeTab === 'dashboard' && <Dashboard vendors={vendors} records={records} />}
         {activeTab === 'vendors' && <VendorList vendors={vendors} onSave={saveVendors} />}

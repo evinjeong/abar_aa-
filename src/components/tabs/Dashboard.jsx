@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, BarChart, Bar, Legend, LabelList
@@ -14,6 +14,13 @@ const Dashboard = ({ vendors, records }) => {
     const [shopActiveMonth, setShopActiveMonth] = useState(null);
     const [homeActiveMonth, setHomeActiveMonth] = useState(null);
     const [otherActiveMonth, setOtherActiveMonth] = useState(null);
+    const [isChartReady, setIsChartReady] = useState(false);
+
+    useEffect(() => {
+        // Small delay to ensure the parent container has size after fade-in animation
+        const timer = setTimeout(() => setIsChartReady(true), 500);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Pre-calculate all available months for cross-referencing
     const allMonths = [...new Set(records.map(r => r.month))].sort();
@@ -118,57 +125,63 @@ const Dashboard = ({ vendors, records }) => {
             }}>
                 <StatCard title="전체 매출 합계" value={totalSales} icon={<TrendingUp size={20} />} color="rgba(99, 102, 241, 0.4)" />
                 <StatCard title="전체 매입 합계" value={totalPurchases} icon={<ShoppingCart size={20} />} color="rgba(239, 68, 68, 0.4)" />
-                <StatCard title="누적 영업 수익" value={totalProfit} icon={<DollarSign size={20} />} color="rgba(16, 185, 129, 0.4)" />
+                <StatCard title="누적 영업 수익" value={totalProfit} icon={<DollarSign size={20} />} color={totalProfit >= 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)"} />
                 <StatCard title="누적 광고비 집행" value={totalAds} icon={<TrendingDown size={20} />} color="rgba(245, 158, 11, 0.4)" />
             </div>
 
             <div className="card" style={{ marginBottom: '2.5rem', height: '380px' }}>
                 <h3 style={{ marginBottom: '1.5rem' }}>📈 전체 월별 성장 추이</h3>
-                <ResponsiveContainer width="100%" height="90%">
-                    <AreaChart data={overallChart} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                        <defs>
-                            <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                        <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                        <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => (v / 10000).toLocaleString() + '만'} />
-                        <Tooltip
-                            contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}
-                            itemStyle={{ fontSize: '0.85rem' }}
-                            formatter={(v) => v.toLocaleString() + '원'}
-                        />
-                        <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
-                        <Area
-                            type="monotone"
-                            dataKey="sales"
-                            name="매출"
-                            stroke="#6366f1"
-                            strokeWidth={3}
-                            fillOpacity={1}
-                            fill="url(#colorSales)"
-                            dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }}
-                            activeDot={{ r: 6, strokeWidth: 0 }}
-                        />
-                        <Area
-                            type="monotone"
-                            dataKey="profit"
-                            name="수익"
-                            stroke="#10b981"
-                            strokeWidth={3}
-                            fillOpacity={1}
-                            fill="url(#colorProfit)"
-                            dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
-                            activeDot={{ r: 6, strokeWidth: 0 }}
-                        />
-                    </AreaChart>
-                </ResponsiveContainer>
+                {isChartReady ? (
+                    <ResponsiveContainer width="100%" height="90%">
+                        <AreaChart data={overallChart} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                </linearGradient>
+                                <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                            <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => (v / 10000).toLocaleString() + '만'} />
+                            <Tooltip
+                                contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}
+                                itemStyle={{ fontSize: '0.85rem' }}
+                                formatter={(v) => v.toLocaleString() + '원'}
+                            />
+                            <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
+                            <Area
+                                type="monotone"
+                                dataKey="sales"
+                                name="매출"
+                                stroke="#6366f1"
+                                strokeWidth={3}
+                                fillOpacity={1}
+                                fill="url(#colorSales)"
+                                dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 6, strokeWidth: 0 }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="profit"
+                                name="수익"
+                                stroke="#10b981"
+                                strokeWidth={3}
+                                fillOpacity={1}
+                                fill="url(#colorProfit)"
+                                dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 6, strokeWidth: 0 }}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div style={{ height: '90%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                        데이터 로딩 중...
+                    </div>
+                )}
             </div>
 
             {/* Section: Category Monthly Explorer (New Selection Layout) */}
@@ -277,24 +290,26 @@ const Dashboard = ({ vendors, records }) => {
                                         </button>
                                     )}
                                 </div>
-                                <ResponsiveContainer width="100%" height="80%">
-                                    <BarChart data={activeMonth ? stats.monthly.filter(m => m.month === activeMonth) : stats.monthly} margin={{ top: 20, right: 10, left: 10, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                        <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                                        <YAxis stroke="var(--text-muted)" fontSize={11} hide />
-                                        <Tooltip
-                                            contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                            formatter={(v) => v.toLocaleString() + '원'}
-                                        />
-                                        <Legend iconType="circle" />
-                                        <Bar dataKey="sales" name="매출" fill={categoryColor} radius={[6, 6, 0, 0]} barSize={24}>
-                                            <LabelList dataKey="sales" position="top" formatter={(v) => (v / 10000).toFixed(0) + '만'} style={{ fill: '#fff', fontSize: '10px', fontWeight: 'bold' }} />
-                                        </Bar>
-                                        <Bar dataKey="profit" name="수익" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24}>
-                                            <LabelList dataKey="profit" position="top" formatter={(v) => v !== 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#6ee7b7', fontSize: '10px', fontWeight: 'bold' }} />
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
+                                {isChartReady && (
+                                    <ResponsiveContainer width="100%" height="80%">
+                                        <BarChart data={activeMonth ? stats.monthly.filter(m => m.month === activeMonth) : stats.monthly} margin={{ top: 20, right: 10, left: 10, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                            <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                                            <YAxis stroke="var(--text-muted)" fontSize={11} hide />
+                                            <Tooltip
+                                                contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                                formatter={(v) => v.toLocaleString() + '원'}
+                                            />
+                                            <Legend iconType="circle" />
+                                            <Bar dataKey="sales" name="매출" fill={categoryColor} radius={[6, 6, 0, 0]} barSize={24}>
+                                                <LabelList dataKey="sales" position="top" formatter={(v) => (v / 10000).toFixed(0) + '만'} style={{ fill: '#fff', fontSize: '10px', fontWeight: 'bold' }} />
+                                            </Bar>
+                                            <Bar dataKey="profit" name="수익" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24}>
+                                                <LabelList dataKey="profit" position="top" formatter={(v) => v !== 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#6ee7b7', fontSize: '10px', fontWeight: 'bold' }} />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                )}
                             </div>
                         </div>
                     );
@@ -314,28 +329,30 @@ const Dashboard = ({ vendors, records }) => {
                 {!vendorActiveMonth ? (
                     <div className="responsive-grid" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                         <div className="chart-container" style={{ height: '320px' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                    data={vendorStats.monthly}
-                                    margin={{ top: 25, right: 30, left: 20, bottom: 5 }}
-                                    onClick={(data) => data && data.activeLabel && setVendorActiveMonth(data.activeLabel)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                                    <YAxis stroke="var(--text-muted)" fontSize={12} hide />
-                                    <Tooltip
-                                        contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px' }}
-                                        formatter={(val) => val.toLocaleString() + '원'}
-                                    />
-                                    <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
-                                    <Bar dataKey="sales" name="매출액" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={20}>
-                                        <LabelList dataKey="sales" position="top" formatter={(v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#a78bfa', fontSize: '10px', fontWeight: 'bold' }} />
-                                    </Bar>
-                                    <Bar dataKey="purchases" name="매입액" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={20} />
-                                    <Bar dataKey="profit" name="수익" fill="#10b981" radius={[6, 6, 0, 0]} barSize={20} />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {isChartReady && (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={vendorStats.monthly}
+                                        margin={{ top: 25, right: 30, left: 20, bottom: 5 }}
+                                        onClick={(data) => data && data.activeLabel && setVendorActiveMonth(data.activeLabel)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                        <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="var(--text-muted)" fontSize={12} hide />
+                                        <Tooltip
+                                            contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px' }}
+                                            formatter={(val) => val.toLocaleString() + '원'}
+                                        />
+                                        <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
+                                        <Bar dataKey="sales" name="매출액" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={20}>
+                                            <LabelList dataKey="sales" position="top" formatter={(v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#a78bfa', fontSize: '10px', fontWeight: 'bold' }} />
+                                        </Bar>
+                                        <Bar dataKey="purchases" name="매입액" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={20} />
+                                        <Bar dataKey="profit" name="수익" fill="#10b981" radius={[6, 6, 0, 0]} barSize={20} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                         <div className="table-container" style={{ maxHeight: '350px', overflowY: 'auto' }}>
                             <table style={{ fontSize: '0.85rem' }}>
@@ -416,28 +433,30 @@ const Dashboard = ({ vendors, records }) => {
                 {!shopActiveMonth ? (
                     <div className="responsive-grid" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                         <div className="chart-container" style={{ height: '300px' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                    data={shopStats.monthly}
-                                    margin={{ top: 25, right: 10, left: 10, bottom: 5 }}
-                                    onClick={(data) => data && data.activeLabel && setShopActiveMonth(data.activeLabel)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                                    <YAxis yAxisId="left" stroke="var(--text-muted)" fontSize={11} hide />
-                                    <YAxis yAxisId="right" orientation="right" stroke="var(--primary)" fontSize={11} hide />
-                                    <Tooltip
-                                        contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)' }}
-                                        formatter={(v, name) => name === 'ROAS' ? v + '%' : v.toLocaleString() + '원'}
-                                    />
-                                    <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
-                                    <Bar yAxisId="left" dataKey="sales" name="매출액" fill="var(--primary)" radius={[6, 6, 0, 0]} barSize={20}>
-                                        <LabelList dataKey="sales" position="top" formatter={(v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#fff', fontSize: '10px', fontWeight: 'bold' }} />
-                                    </Bar>
-                                    <Bar yAxisId="left" dataKey="profit" name="순수익" fill="var(--accent)" radius={[6, 6, 0, 0]} barSize={20} />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {isChartReady && (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={shopStats.monthly}
+                                        margin={{ top: 25, right: 10, left: 10, bottom: 5 }}
+                                        onClick={(data) => data && data.activeLabel && setShopActiveMonth(data.activeLabel)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                        <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                                        <YAxis yAxisId="left" stroke="var(--text-muted)" fontSize={11} hide />
+                                        <YAxis yAxisId="right" orientation="right" stroke="var(--primary)" fontSize={11} hide />
+                                        <Tooltip
+                                            contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)' }}
+                                            formatter={(v, name) => name === 'ROAS' ? v + '%' : v.toLocaleString() + '원'}
+                                        />
+                                        <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
+                                        <Bar yAxisId="left" dataKey="sales" name="매출액" fill="var(--primary)" radius={[6, 6, 0, 0]} barSize={20}>
+                                            <LabelList dataKey="sales" position="top" formatter={(v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#fff', fontSize: '10px', fontWeight: 'bold' }} />
+                                        </Bar>
+                                        <Bar yAxisId="left" dataKey="profit" name="순수익" fill="var(--accent)" radius={[6, 6, 0, 0]} barSize={20} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                         <div className="table-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                             <table style={{ fontSize: '0.85rem' }}>
@@ -538,29 +557,31 @@ const Dashboard = ({ vendors, records }) => {
                     {!homeActiveMonth ? (
                         <>
                             <div style={{ height: '220px', marginBottom: '1.5rem' }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart
-                                        data={homeStats.monthly}
-                                        margin={{ top: 25, right: 30, left: 20, bottom: 5 }}
-                                        onClick={(data) => data && data.activeLabel && setHomeActiveMonth(data.activeLabel)}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                        <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                                        <YAxis stroke="var(--text-muted)" fontSize={12} hide />
-                                        <Tooltip
-                                            contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px' }}
-                                            formatter={(val) => val.toLocaleString() + '원'}
-                                        />
-                                        <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
-                                        <Bar dataKey="sales" name="매출액" fill="#fbbf24" radius={[6, 6, 0, 0]} barSize={20}>
-                                            <LabelList dataKey="sales" position="top" formatter={(v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#fbbf24', fontSize: '10px', fontWeight: 'bold' }} />
-                                        </Bar>
-                                        <Bar dataKey="profit" name="수익" fill="#10b981" radius={[6, 6, 0, 0]} barSize={20}>
-                                            <LabelList dataKey="profit" position="top" formatter={(v) => v !== 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#6ee7b7', fontSize: '10px', fontWeight: 'bold' }} />
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
+                                {isChartReady && (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={homeStats.monthly}
+                                            margin={{ top: 25, right: 30, left: 20, bottom: 5 }}
+                                            onClick={(data) => data && data.activeLabel && setHomeActiveMonth(data.activeLabel)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                            <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                                            <YAxis stroke="var(--text-muted)" fontSize={12} hide />
+                                            <Tooltip
+                                                contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px' }}
+                                                formatter={(val) => val.toLocaleString() + '원'}
+                                            />
+                                            <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
+                                            <Bar dataKey="sales" name="매출액" fill="#fbbf24" radius={[6, 6, 0, 0]} barSize={20}>
+                                                <LabelList dataKey="sales" position="top" formatter={(v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#fbbf24', fontSize: '10px', fontWeight: 'bold' }} />
+                                            </Bar>
+                                            <Bar dataKey="profit" name="수익" fill="#10b981" radius={[6, 6, 0, 0]} barSize={20}>
+                                                <LabelList dataKey="profit" position="top" formatter={(v) => v !== 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#6ee7b7', fontSize: '10px', fontWeight: 'bold' }} />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                )}
                             </div>
                             <div className="table-container" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                 <table style={{ fontSize: '0.85rem' }}>
@@ -628,29 +649,31 @@ const Dashboard = ({ vendors, records }) => {
                     {!otherActiveMonth ? (
                         <>
                             <div style={{ height: '220px', marginBottom: '1.5rem' }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart
-                                        data={otherStats.monthly}
-                                        margin={{ top: 25, right: 30, left: 20, bottom: 5 }}
-                                        onClick={(data) => data && data.activeLabel && setOtherActiveMonth(data.activeLabel)}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                        <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                                        <YAxis stroke="var(--text-muted)" fontSize={12} hide />
-                                        <Tooltip
-                                            contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px' }}
-                                            formatter={(v) => v.toLocaleString() + '원'}
-                                        />
-                                        <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
-                                        <Bar dataKey="sales" name="매출" fill="#94a3b8" radius={[6, 6, 0, 0]} barSize={20}>
-                                            <LabelList dataKey="sales" position="top" formatter={(v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }} />
-                                        </Bar>
-                                        <Bar dataKey="profit" name="수익" fill="#10b981" radius={[6, 6, 0, 0]} barSize={20}>
-                                            <LabelList dataKey="profit" position="top" formatter={(v) => v !== 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#6ee7b7', fontSize: '10px', fontWeight: 'bold' }} />
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
+                                {isChartReady && (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={otherStats.monthly}
+                                            margin={{ top: 25, right: 30, left: 20, bottom: 5 }}
+                                            onClick={(data) => data && data.activeLabel && setOtherActiveMonth(data.activeLabel)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                            <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                                            <YAxis stroke="var(--text-muted)" fontSize={12} hide />
+                                            <Tooltip
+                                                contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px' }}
+                                                formatter={(v) => v.toLocaleString() + '원'}
+                                            />
+                                            <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
+                                            <Bar dataKey="sales" name="매출" fill="#94a3b8" radius={[6, 6, 0, 0]} barSize={20}>
+                                                <LabelList dataKey="sales" position="top" formatter={(v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }} />
+                                            </Bar>
+                                            <Bar dataKey="profit" name="수익" fill="#10b981" radius={[6, 6, 0, 0]} barSize={20}>
+                                                <LabelList dataKey="profit" position="top" formatter={(v) => v !== 0 ? (v / 10000).toFixed(0) + '만' : ''} style={{ fill: '#6ee7b7', fontSize: '10px', fontWeight: 'bold' }} />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                )}
                             </div>
                             <div className="table-container" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                 <table style={{ fontSize: '0.85rem' }}>
@@ -786,29 +809,31 @@ const Dashboard = ({ vendors, records }) => {
                                 <div className="responsive-grid" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                                     <div className="chart-container" style={{ height: '300px', background: 'rgba(0,0,0,0.1)', borderRadius: '8px', padding: '1rem', order: 1 }}>
                                         <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem' }}>{vendor.name} 실적 추이</h4>
-                                        <ResponsiveContainer width="100%" height="85%">
-                                            <AreaChart data={monthlyData}>
-                                                <defs>
-                                                    <linearGradient id="colorVendorSales" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                                    </linearGradient>
-                                                    <linearGradient id="colorVendorProfit" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                                    </linearGradient>
-                                                </defs>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                                <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                                                <YAxis stroke="var(--text-muted)" fontSize={11} hide />
-                                                <Tooltip
-                                                    contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)' }}
-                                                    formatter={(v) => v.toLocaleString() + '원'}
-                                                />
-                                                <Area type="monotone" dataKey="sales" name="매출" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorVendorSales)" dot={{ r: 3, fill: '#6366f1' }} />
-                                                <Area type="monotone" dataKey="profit" name="수익" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorVendorProfit)" dot={{ r: 3, fill: '#10b981' }} />
-                                            </AreaChart>
-                                        </ResponsiveContainer>
+                                        {isChartReady && (
+                                            <ResponsiveContainer width="100%" height="85%">
+                                                <AreaChart data={monthlyData}>
+                                                    <defs>
+                                                        <linearGradient id="colorVendorSales" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                                        </linearGradient>
+                                                        <linearGradient id="colorVendorProfit" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                                    <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                                                    <YAxis stroke="var(--text-muted)" fontSize={11} hide />
+                                                    <Tooltip
+                                                        contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)' }}
+                                                        formatter={(v) => v.toLocaleString() + '원'}
+                                                    />
+                                                    <Area type="monotone" dataKey="sales" name="매출" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorVendorSales)" dot={{ r: 3, fill: '#6366f1' }} />
+                                                    <Area type="monotone" dataKey="profit" name="수익" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorVendorProfit)" dot={{ r: 3, fill: '#10b981' }} />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        )}
                                     </div>
                                     <div className="table-container" style={{ order: 2 }}>
                                         <table style={{ fontSize: '0.85rem' }}>

@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
-import { Settings, Trash2, Key, RefreshCw, Save, LogOut } from 'lucide-react';
+import { Settings, Trash2, Key, RefreshCw, Save, LogOut, Cloud, Github } from 'lucide-react';
+import { getSyncSettings, saveSyncSettings } from '../../utils/githubSync';
 
 const SettingsTab = ({ onResetData }) => {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [githubSettings, setGithubSettings] = useState(getSyncSettings() || {
+        token: '',
+        owner: '',
+        repo: 'abar_aa-',
+        branch: 'main'
+    });
 
     const handlePasswordChange = (e) => {
         e.preventDefault();
@@ -43,6 +50,12 @@ const SettingsTab = ({ onResetData }) => {
         if (window.confirm("로그아웃 하시겠습니까?")) {
             window.location.reload();
         }
+    };
+
+    const handleSaveGithub = (e) => {
+        e.preventDefault();
+        saveSyncSettings(githubSettings);
+        setMessage({ type: 'success', text: 'GitHub 동기화 설정이 저장되었습니다.' });
     };
 
     return (
@@ -138,6 +151,53 @@ const SettingsTab = ({ onResetData }) => {
                             </button>
                         </div>
                     </div>
+                </div>
+                {/* Cloud Sync Card */}
+                <div className="card">
+                    <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                        <Cloud size={20} color="var(--primary)" />
+                        <h3 style={{ margin: 0 }}>클라우드 동기화 (GitHub)</h3>
+                    </div>
+
+                    <form onSubmit={handleSaveGithub}>
+                        <div className="form-group" style={{ marginBottom: '15px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <Github size={14} /> Personal Access Token (PAT)
+                            </label>
+                            <input
+                                type="password"
+                                value={githubSettings.token}
+                                onChange={(e) => setGithubSettings({ ...githubSettings, token: e.target.value })}
+                                placeholder="ghp_..."
+                            />
+                        </div>
+                        <div className="grid grid-2" style={{ gap: '10px', marginBottom: '15px' }}>
+                            <div className="form-group">
+                                <label>Repo Owner</label>
+                                <input
+                                    type="text"
+                                    value={githubSettings.owner}
+                                    onChange={(e) => setGithubSettings({ ...githubSettings, owner: e.target.value })}
+                                    placeholder="evinjeong"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Repo Name</label>
+                                <input
+                                    type="text"
+                                    value={githubSettings.repo}
+                                    onChange={(e) => setGithubSettings({ ...githubSettings, repo: e.target.value })}
+                                    placeholder="abar_aa-"
+                                />
+                            </div>
+                        </div>
+                        <button type="submit" className="btn-primary" style={{ width: '100%', background: 'var(--bg-dark)', border: '1px solid var(--primary)' }}>
+                            <Save size={18} style={{ marginRight: '8px' }} /> 동기화 설정 저장
+                        </button>
+                        <p style={{ marginTop: '10px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            * 설정이 저장되면 다음번 데이터 저장 시 자동으로 GitHub에 백업됩니다.
+                        </p>
+                    </form>
                 </div>
             </div>
         </div>

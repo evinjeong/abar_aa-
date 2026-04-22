@@ -819,8 +819,46 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
                                                             />
                                                         ) : (record.date || record.month)}
                                                     </td>
-                                                    <td style={{ fontWeight: '500' }}>{record.vendorName}</td>
-                                                    <td><span className="category-tag" style={{ fontSize: '0.7rem' }}>{record.category}</span></td>
+                                                    <td style={{ fontWeight: '500' }}>
+                                                        {isEditing ? (
+                                                            <select
+                                                                value={editForm.vendorNo || ""}
+                                                                onChange={(e) => {
+                                                                    const vId = Number(e.target.value);
+                                                                    const v = vendors.find(v => v.no === vId);
+                                                                    if (v) {
+                                                                        setEditForm({ ...editForm, vendorNo: v.no, vendorName: v.name, category: v.category });
+                                                                    } else {
+                                                                        // Fallback if none selected
+                                                                        setEditForm({ ...editForm, vendorNo: null });
+                                                                    }
+                                                                }}
+                                                                style={{ width: '100%', fontSize: '0.8rem', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff', outline: 'none' }}
+                                                            >
+                                                                <option value="">거래처 선택</option>
+                                                                {vendors.map(v => (
+                                                                    <option key={v.no} value={v.no}>{v.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        ) : (
+                                                            record.vendorName
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        {isEditing ? (
+                                                            <select
+                                                                value={editForm.category || '미분류'}
+                                                                onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                                                                style={{ width: '100%', fontSize: '0.8rem', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff', outline: 'none' }}
+                                                            >
+                                                                {['업체', '쇼핑몰', '홈쇼핑', '기타', '미분류'].map(cat => (
+                                                                    <option key={cat} value={cat}>{cat}</option>
+                                                                ))}
+                                                            </select>
+                                                        ) : (
+                                                            <span className="category-tag" style={{ fontSize: '0.7rem' }}>{record.category}</span>
+                                                        )}
+                                                    </td>
                                                     <td style={{ textAlign: 'right' }}>
                                                         {isEditing ? (
                                                             <input
