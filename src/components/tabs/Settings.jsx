@@ -9,7 +9,7 @@ const SettingsTab = ({ onResetData }) => {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [githubSettings, setGithubSettings] = useState(getSyncSettings() || {
         token: '',
-        owner: '',
+        owner: 'evinjeong',
         repo: 'abar_aa-',
         branch: 'main'
     });
