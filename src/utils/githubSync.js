@@ -25,7 +25,9 @@ export class GitHubSync {
             if (!response.ok) throw new Error(`GitHub API error: ${response.statusText}`);
 
             const data = await response.json();
-            const content = JSON.parse(atob(data.content));
+            // Decode base64 array back to UTF-8 string safely
+            const utf8Str = decodeURIComponent(escape(atob(data.content)));
+            const content = JSON.parse(utf8Str);
             return { content, sha: data.sha };
         } catch (error) {
             console.error(`Error fetching ${path}:`, error);
