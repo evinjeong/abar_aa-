@@ -23,6 +23,7 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
     const [filterVendor, setFilterVendor] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const recordsPerPage = 20;
+    const [selectedIds, setSelectedIds] = useState([]);
 
     const [uploadPreview, setUploadPreview] = useState([]);
     const [activePicker, setActivePicker] = useState(null); // Track which row is being edited
@@ -482,6 +483,14 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
     const deleteRecord = (id) => {
         if (window.confirm("삭제하시겠습니까?")) {
             onSave(records.filter(r => r.id !== id));
+            setSelectedIds(prev => prev.filter(itemId => itemId !== id));
+        }
+    };
+
+    const handleBulkDelete = () => {
+        if (window.confirm(`선택한 ${selectedIds.length}개의 데이터를 정말 삭제하시겠습니까?`)) {
+            onSave(records.filter(r => !selectedIds.includes(r.id)));
+            setSelectedIds([]);
         }
     };
 
@@ -717,7 +726,18 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
             {/* List */}
             <div className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h3 style={{ margin: 0 }}>데이터 관리 및 검색 (전체 {records.length}건)</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <h3 style={{ margin: 0 }}>데이터 관리 및 검색 (전체 {records.length}건)</h3>
+                        {selectedIds.length > 0 && (
+                            <button
+                                onClick={handleBulkDelete}
+                                className="btn-outline"
+                                style={{ fontSize: '0.75rem', padding: '4px 10px', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.1)' }}
+                            >
+                                <Trash2 size={14} style={{ marginRight: '4px' }} /> {selectedIds.length}개 선택 삭제
+                            </button>
+                        )}
+                    </div>
 
                     <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
                         <button
@@ -764,205 +784,231 @@ const DataEntry = ({ vendors, records, onSave, onVendorSave, mappings, onMapping
                     </div>
                 </div>
 
-                <div className="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style={{ width: '120px' }}>날짜/월</th>
-                                <th>거래처</th>
-                                <th style={{ width: '80px' }}>구분</th>
-                                <th style={{ textAlign: 'right' }}>매출</th>
-                                <th style={{ textAlign: 'right' }}>매입</th>
-                                <th style={{ textAlign: 'right', color: '#fbbf24' }}>광고</th>
-                                <th style={{ textAlign: 'right', color: '#94a3b8' }}>수수료</th>
-                                <th style={{ textAlign: 'right', color: '#94a3b8' }}>기타</th>
-                                <th style={{ textAlign: 'right' }}>수익</th>
-                                <th style={{ width: '100px', textAlign: 'center' }}>관리</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {(() => {
-                                const filtered = records.filter(r => {
-                                    const rDate = r.date || r.month;
-                                    const matchStart = !filterDateStart || rDate >= filterDateStart;
-                                    const matchEnd = !filterDateEnd || rDate <= filterDateEnd;
-                                    const matchVendor = !filterVendor || r.vendorName.toLowerCase().includes(filterVendor.toLowerCase());
-                                    return matchStart && matchEnd && matchVendor;
-                                }).reverse();
+                {(() => {
+                    const filteredRecords = records.filter(r => {
+                        const rDate = r.date || r.month;
+                        const matchStart = !filterDateStart || rDate >= filterDateStart;
+                        const matchEnd = !filterDateEnd || rDate <= filterDateEnd;
+                        const matchVendor = !filterVendor || r.vendorName.toLowerCase().includes(filterVendor.toLowerCase());
+                        return matchStart && matchEnd && matchVendor;
+                    }).reverse();
 
-                                const totalFiltered = filtered.length;
-                                const lastIdx = currentPage * recordsPerPage;
-                                const firstIdx = lastIdx - recordsPerPage;
-                                const currentRecords = filtered.slice(firstIdx, lastIdx);
+                    const totalFiltered = filteredRecords.length;
+                    const lastIdx = currentPage * recordsPerPage;
+                    const firstIdx = lastIdx - recordsPerPage;
+                    const currentRecords = filteredRecords.slice(firstIdx, lastIdx);
 
-                                if (currentRecords.length === 0) {
-                                    return <tr><td colSpan="10" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>조건에 맞는 데이터가 없습니다.</td></tr>;
-                                }
+                    const isAllSelected = currentRecords.length > 0 && currentRecords.every(r => selectedIds.includes(r.id));
 
-                                return (
-                                    <>
-                                        {currentRecords.map(record => {
-                                            const isEditing = editingId === record.id;
-                                            const profit = isEditing
-                                                ? (editForm.sales - editForm.purchases - editForm.ads - editForm.commission - editForm.others)
-                                                : (record.sales - record.purchases - record.ads - record.commission - record.others);
+                    return (
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: '40px', textAlign: 'center' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isAllSelected}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        const newIds = currentRecords.map(r => r.id);
+                                                        setSelectedIds(prev => [...new Set([...prev, ...newIds])]);
+                                                    } else {
+                                                        const currentIds = currentRecords.map(r => r.id);
+                                                        setSelectedIds(prev => prev.filter(id => !currentIds.includes(id)));
+                                                    }
+                                                }}
+                                            />
+                                        </th>
+                                        <th style={{ width: '120px' }}>날짜/월</th>
+                                        <th>거래처</th>
+                                        <th style={{ width: '80px' }}>구분</th>
+                                        <th style={{ textAlign: 'right' }}>매출</th>
+                                        <th style={{ textAlign: 'right' }}>매입</th>
+                                        <th style={{ textAlign: 'right', color: '#fbbf24' }}>광고</th>
+                                        <th style={{ textAlign: 'right', color: '#94a3b8' }}>수수료</th>
+                                        <th style={{ textAlign: 'right', color: '#94a3b8' }}>기타</th>
+                                        <th style={{ textAlign: 'right' }}>수익</th>
+                                        <th style={{ width: '100px', textAlign: 'center' }}>관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {currentRecords.length === 0 ? (
+                                        <tr><td colSpan="11" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>조건에 맞는 데이터가 없습니다.</td></tr>
+                                    ) : (
+                                        <>
+                                            {currentRecords.map(record => {
+                                                const isEditing = editingId === record.id;
+                                                const profit = isEditing
+                                                    ? (editForm.sales - editForm.purchases - editForm.ads - editForm.commission - editForm.others)
+                                                    : (record.sales - record.purchases - record.ads - record.commission - record.others);
+                                                const isSelected = selectedIds.includes(record.id);
 
-                                            return (
-                                                <tr key={record.id} style={{ background: isEditing ? 'rgba(99, 102, 241, 0.05)' : 'transparent' }}>
-                                                    <td>
-                                                        {isEditing ? (
+                                                return (
+                                                    <tr key={record.id} style={{ background: isEditing ? 'rgba(99, 102, 241, 0.05)' : (isSelected ? 'rgba(239, 68, 68, 0.05)' : 'transparent') }}>
+                                                        <td style={{ textAlign: 'center' }}>
                                                             <input
-                                                                type="text"
-                                                                value={editForm.date || editForm.month}
-                                                                onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
-                                                                style={{ width: '100%', fontSize: '0.8rem', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
-                                                            />
-                                                        ) : (record.date || record.month)}
-                                                    </td>
-                                                    <td style={{ fontWeight: '500' }}>
-                                                        {isEditing ? (
-                                                            <select
-                                                                value={editForm.vendorNo || ""}
-                                                                onChange={(e) => {
-                                                                    const vId = Number(e.target.value);
-                                                                    const v = vendors.find(v => v.no === vId);
-                                                                    if (v) {
-                                                                        setEditForm({ ...editForm, vendorNo: v.no, vendorName: v.name, category: v.category });
-                                                                    } else {
-                                                                        // Fallback if none selected
-                                                                        setEditForm({ ...editForm, vendorNo: null });
-                                                                    }
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => {
+                                                                    setSelectedIds(prev => prev.includes(record.id) ? prev.filter(id => id !== record.id) : [...prev, record.id]);
                                                                 }}
-                                                                style={{ width: '100%', fontSize: '0.8rem', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff', outline: 'none' }}
-                                                            >
-                                                                <option value="">거래처 선택</option>
-                                                                {vendors.map(v => (
-                                                                    <option key={v.no} value={v.no}>{v.name}</option>
-                                                                ))}
-                                                            </select>
-                                                        ) : (
-                                                            record.vendorName
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        {isEditing ? (
-                                                            <select
-                                                                value={editForm.category || '미분류'}
-                                                                onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                                                style={{ width: '100%', fontSize: '0.8rem', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff', outline: 'none' }}
-                                                            >
-                                                                {['업체', '쇼핑몰', '홈쇼핑', '기타', '미분류'].map(cat => (
-                                                                    <option key={cat} value={cat}>{cat}</option>
-                                                                ))}
-                                                            </select>
-                                                        ) : (
-                                                            <span className="category-tag" style={{ fontSize: '0.7rem' }}>{record.category}</span>
-                                                        )}
-                                                    </td>
-                                                    <td style={{ textAlign: 'right' }}>
-                                                        {isEditing ? (
-                                                            <input
-                                                                type="text"
-                                                                value={editForm.sales}
-                                                                onChange={(e) => setEditForm({ ...editForm, sales: parseNum(e.target.value) })}
-                                                                style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
                                                             />
-                                                        ) : record.sales.toLocaleString()}
-                                                    </td>
-                                                    <td style={{ textAlign: 'right' }}>
-                                                        {isEditing ? (
-                                                            <input
-                                                                type="text"
-                                                                value={editForm.purchases}
-                                                                onChange={(e) => setEditForm({ ...editForm, purchases: parseNum(e.target.value) })}
-                                                                style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
-                                                            />
-                                                        ) : record.purchases.toLocaleString()}
-                                                    </td>
-                                                    <td style={{ textAlign: 'right' }}>
-                                                        {isEditing ? (
-                                                            <input
-                                                                type="text"
-                                                                value={editForm.ads}
-                                                                onChange={(e) => setEditForm({ ...editForm, ads: parseNum(e.target.value) })}
-                                                                style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
-                                                            />
-                                                        ) : record.ads.toLocaleString()}
-                                                    </td>
-                                                    <td style={{ textAlign: 'right' }}>
-                                                        {isEditing ? (
-                                                            <input
-                                                                type="text"
-                                                                value={editForm.commission}
-                                                                onChange={(e) => setEditForm({ ...editForm, commission: parseNum(e.target.value) })}
-                                                                style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
-                                                            />
-                                                        ) : record.commission.toLocaleString()}
-                                                    </td>
-                                                    <td style={{ textAlign: 'right' }}>
-                                                        {isEditing ? (
-                                                            <input
-                                                                type="text"
-                                                                value={editForm.others}
-                                                                onChange={(e) => setEditForm({ ...editForm, others: parseNum(e.target.value) })}
-                                                                style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
-                                                            />
-                                                        ) : record.others.toLocaleString()}
-                                                    </td>
-                                                    <td style={{ textAlign: 'right', color: profit >= 0 ? 'var(--accent)' : 'var(--danger)', fontWeight: '600' }}>
-                                                        {profit.toLocaleString()}
-                                                    </td>
-                                                    <td>
-                                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                        </td>
+                                                        <td>
                                                             {isEditing ? (
-                                                                <>
-                                                                    <button onClick={handleSaveEdit} className="btn-primary" style={{ padding: '4px 8px', fontSize: '0.7rem' }}>저장</button>
-                                                                    <button onClick={() => setEditingId(null)} className="btn-outline" style={{ padding: '4px 8px', fontSize: '0.7rem' }}>취소</button>
-                                                                </>
+                                                                <input
+                                                                    type="text"
+                                                                    value={editForm.date || editForm.month}
+                                                                    onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                                                                    style={{ width: '100%', fontSize: '0.8rem', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
+                                                                />
+                                                            ) : (record.date || record.month)}
+                                                        </td>
+                                                        <td style={{ fontWeight: '500' }}>
+                                                            {isEditing ? (
+                                                                <select
+                                                                    value={editForm.vendorNo || ""}
+                                                                    onChange={(e) => {
+                                                                        const vId = Number(e.target.value);
+                                                                        const v = vendors.find(v => v.no === vId);
+                                                                        if (v) {
+                                                                            setEditForm({ ...editForm, vendorNo: v.no, vendorName: v.name, category: v.category });
+                                                                        } else {
+                                                                            setEditForm({ ...editForm, vendorNo: null });
+                                                                        }
+                                                                    }}
+                                                                    style={{ width: '100%', fontSize: '0.8rem', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff', outline: 'none' }}
+                                                                >
+                                                                    <option value="">거래처 선택</option>
+                                                                    {vendors.map(v => (
+                                                                        <option key={v.no} value={v.no}>{v.name}</option>
+                                                                    ))}
+                                                                </select>
                                                             ) : (
-                                                                <>
-                                                                    <button style={{ background: 'transparent', color: 'var(--primary)', padding: '4px' }} onClick={() => handleStartEdit(record)} title="수정">
-                                                                        <Save size={16} />
-                                                                    </button>
-                                                                    <button style={{ background: 'transparent', color: 'var(--danger)', padding: '4px' }} onClick={() => deleteRecord(record.id)} title="삭제">
-                                                                        <Trash2 size={16} />
-                                                                    </button>
-                                                                </>
+                                                                record.vendorName
                                                             )}
+                                                        </td>
+                                                        <td>
+                                                            {isEditing ? (
+                                                                <select
+                                                                    value={editForm.category || '미분류'}
+                                                                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                                                                    style={{ width: '100%', fontSize: '0.8rem', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff', outline: 'none' }}
+                                                                >
+                                                                    {['업체', '쇼핑몰', '홈쇼핑', '기타', '미분류'].map(cat => (
+                                                                        <option key={cat} value={cat}>{cat}</option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : (
+                                                                <span className="category-tag" style={{ fontSize: '0.7rem' }}>{record.category}</span>
+                                                            )}
+                                                        </td>
+                                                        <td style={{ textAlign: 'right' }}>
+                                                            {isEditing ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={editForm.sales}
+                                                                    onChange={(e) => setEditForm({ ...editForm, sales: parseNum(e.target.value) })}
+                                                                    style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
+                                                                />
+                                                            ) : record.sales.toLocaleString()}
+                                                        </td>
+                                                        <td style={{ textAlign: 'right' }}>
+                                                            {isEditing ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={editForm.purchases}
+                                                                    onChange={(e) => setEditForm({ ...editForm, purchases: parseNum(e.target.value) })}
+                                                                    style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
+                                                                />
+                                                            ) : record.purchases.toLocaleString()}
+                                                        </td>
+                                                        <td style={{ textAlign: 'right' }}>
+                                                            {isEditing ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={editForm.ads}
+                                                                    onChange={(e) => setEditForm({ ...editForm, ads: parseNum(e.target.value) })}
+                                                                    style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
+                                                                />
+                                                            ) : record.ads.toLocaleString()}
+                                                        </td>
+                                                        <td style={{ textAlign: 'right' }}>
+                                                            {isEditing ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={editForm.commission}
+                                                                    onChange={(e) => setEditForm({ ...editForm, commission: parseNum(e.target.value) })}
+                                                                    style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
+                                                                />
+                                                            ) : record.commission.toLocaleString()}
+                                                        </td>
+                                                        <td style={{ textAlign: 'right' }}>
+                                                            {isEditing ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={editForm.others}
+                                                                    onChange={(e) => setEditForm({ ...editForm, others: parseNum(e.target.value) })}
+                                                                    style={{ width: '90%', fontSize: '0.8rem', textAlign: 'right', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--primary)', color: '#fff' }}
+                                                                />
+                                                            ) : record.others.toLocaleString()}
+                                                        </td>
+                                                        <td style={{ textAlign: 'right', color: profit >= 0 ? 'var(--accent)' : 'var(--danger)', fontWeight: '600' }}>
+                                                            {profit.toLocaleString()}
+                                                        </td>
+                                                        <td>
+                                                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                                {isEditing ? (
+                                                                    <>
+                                                                        <button onClick={handleSaveEdit} className="btn-primary" style={{ padding: '4px 8px', fontSize: '0.7rem' }}>저장</button>
+                                                                        <button onClick={() => setEditingId(null)} className="btn-outline" style={{ padding: '4px 8px', fontSize: '0.7rem' }}>취소</button>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <button style={{ background: 'transparent', color: 'var(--primary)', padding: '4px' }} onClick={() => handleStartEdit(record)} title="수정">
+                                                                            <Save size={16} />
+                                                                        </button>
+                                                                        <button style={{ background: 'transparent', color: 'var(--danger)', padding: '4px' }} onClick={() => deleteRecord(record.id)} title="삭제">
+                                                                            <Trash2 size={16} />
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+
+                                            {/* Pagination UI inside the tbody as a single row */}
+                                            {totalFiltered > recordsPerPage && (
+                                                <tr>
+                                                    <td colSpan="11" style={{ padding: '1rem' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
+                                                            <button
+                                                                disabled={currentPage === 1}
+                                                                onClick={() => setCurrentPage(p => p - 1)}
+                                                                className="btn-outline"
+                                                                style={{ padding: '4px 12px', opacity: currentPage === 1 ? 0.3 : 1 }}
+                                                            >이전</button>
+                                                            <span style={{ fontSize: '0.85rem' }}>{currentPage} / {Math.ceil(totalFiltered / recordsPerPage)}</span>
+                                                            <button
+                                                                disabled={currentPage >= Math.ceil(totalFiltered / recordsPerPage)}
+                                                                onClick={() => setCurrentPage(p => p + 1)}
+                                                                className="btn-outline"
+                                                                style={{ padding: '4px 12px', opacity: currentPage >= Math.ceil(totalFiltered / recordsPerPage) ? 0.3 : 1 }}
+                                                            >다음</button>
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            );
-                                        })}
-
-                                        {/* Pagination UI inside the tbody as a single row */}
-                                        {totalFiltered > recordsPerPage && (
-                                            <tr>
-                                                <td colSpan="10" style={{ padding: '1rem' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
-                                                        <button
-                                                            disabled={currentPage === 1}
-                                                            onClick={() => setCurrentPage(p => p - 1)}
-                                                            className="btn-outline"
-                                                            style={{ padding: '4px 12px', opacity: currentPage === 1 ? 0.3 : 1 }}
-                                                        >이전</button>
-                                                        <span style={{ fontSize: '0.85rem' }}>{currentPage} / {Math.ceil(totalFiltered / recordsPerPage)}</span>
-                                                        <button
-                                                            disabled={currentPage >= Math.ceil(totalFiltered / recordsPerPage)}
-                                                            onClick={() => setCurrentPage(p => p + 1)}
-                                                            className="btn-outline"
-                                                            style={{ padding: '4px 12px', opacity: currentPage >= Math.ceil(totalFiltered / recordsPerPage) ? 0.3 : 1 }}
-                                                        >다음</button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </>
-                                );
-                            })()}
-                        </tbody>
-                    </table>
-                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    );
+                })()}
             </div>
         </div>
     );
